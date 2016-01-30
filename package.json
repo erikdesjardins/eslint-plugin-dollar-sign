@@ -1,0 +1,27 @@
+{
+  "name": "eslint-plugin-dollar-sign",
+  "version": "0.0.0",
+  "description": "Enforce $varName for jQuery assignment.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin"
+  ],
+  "author": "Erik Desjardins",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erikdesjardins/eslint-plugin-dollar-sign.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "peerDependencies": {
+    "eslint": ">=1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^1.2.0",
+    "mocha": "^2.4.5"
+  },
+  "license": "MIT"
+}
