@@ -14,7 +14,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha ./tests/*.js"
   },
   "peerDependencies": {
     "eslint": ">=1.0.0"

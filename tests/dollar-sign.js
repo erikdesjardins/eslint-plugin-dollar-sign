@@ -17,7 +17,7 @@ ruleTester.run('dollar-sign', rule, {
     ],
     invalid: [
         {
-            code: 'let title = $(".title"};',
+            code: 'var title = $(".title");',
             errors: [{
                 message: 'Fill me in.',
                 type: 'Me too'
