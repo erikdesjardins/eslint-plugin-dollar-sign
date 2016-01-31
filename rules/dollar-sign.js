@@ -50,11 +50,11 @@ module.exports = function(context) {
 	}
 
 	function checkVariableDeclarator(node) {
-		if (node.id.type === 'ObjectPattern' || node.id.type === 'ArrayPattern') {
+		var left = node.id;
+		if (left.type === 'ObjectPattern' || left.type === 'ArrayPattern') {
 			return;
 		}
 
-		var left = node.id;
 		var varName = left.name;
 		var right = node.init;
 		checkIfVarNameShouldStartWithDollar(varName, left, right);
@@ -63,6 +63,10 @@ module.exports = function(context) {
 	function checkAssignmentExpression(node) {
 		var left = node.left;
 		if (left.computed) {
+			return;
+		}
+
+		if (left.type === 'ObjectPattern' || left.type === 'ArrayPattern') {
 			return;
 		}
 
