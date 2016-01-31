@@ -61,8 +61,14 @@ ruleTester.run('dollar-sign', rule, {
 		'var $x = $(\'.foo\');',
 		// object destructuring
 		{ code: 'var {beep, boop} = meep;\nvar $s = $("#id")', ecmaFeatures: { destructuring: true } },
+		{ code: 'var {beep, boop} = $("#id")', ecmaFeatures: { destructuring: true } },
+		// object destructuring without var
+		{ code: '({beep, boop} = $("#id"))', ecmaFeatures: { destructuring: true } },
 		// array destructuring
 		{ code: 'var [beep, boop] = meep;\nvar $s = $("#id")', ecmaFeatures: { destructuring: true } },
+		{ code: 'var [beep, boop] = $("#id")', ecmaFeatures: { destructuring: true } },
+		// array destructuring without var
+		{ code: '([beep, boop] = $("#id"))', ecmaFeatures: { destructuring: true } },
 
 		//// in object definition
 
