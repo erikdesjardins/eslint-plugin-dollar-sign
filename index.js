@@ -8,10 +8,7 @@
 'use strict';
 
 module.exports = {
-    rules: {
-        'dollar-sign': require('./rules/dollar-sign')
-    }
+	rules: {
+		'dollar-sign': require('./rules/dollar-sign')
+	}
 };
-
-
-
