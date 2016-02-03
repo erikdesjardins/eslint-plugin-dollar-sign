@@ -2,4 +2,4 @@
 
 Enforce $varName for jQuery assignment.
 
-An direct port of the `requireDollarBeforejQueryAssignment` rule from JSCS.
+A direct port of the `requireDollarBeforejQueryAssignment` rule from JSCS.
