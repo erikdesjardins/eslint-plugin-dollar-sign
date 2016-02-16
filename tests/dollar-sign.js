@@ -206,6 +206,17 @@ ruleTester.run('dollar-sign', rule, {
 				column: 14
 			}]
 		},
+		// multiple var declarations
+		{
+			code: 'var bar, foo = $(".foo");',
+			output: 'var bar, $foo = $(".foo");',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 10
+			}]
+		},
 
 		//// in object definition
 
