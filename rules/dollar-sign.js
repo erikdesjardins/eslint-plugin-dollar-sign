@@ -21,32 +21,19 @@ module.exports = function(context) {
 			return;
 		}
 
-		var nextToken = sourceCode.getFirstToken(right.callee);
-		if (nextToken.value !== '$') {
+		if (right.callee.type !== 'Identifier' || right.callee.name !== '$') {
 			return;
 		}
 
-		nextToken = sourceCode.getTokenAfter(nextToken);
-		if (nextToken.value !== '(') {
-			return;
-		}
+		var identifier = sourceCode.getLastToken(left);
 
-		while (!(nextToken.type === 'Punctuator' && nextToken.value === ')')) {
-			nextToken = sourceCode.getTokenAfter(nextToken);
-		}
-
-		nextToken = sourceCode.getTokenAfter(nextToken);
-		if (!nextToken || !(nextToken.type === 'Punctuator' && nextToken.value === '.')) {
-			var identifier = sourceCode.getLastToken(left);
-
-			context.report({
-				node: identifier,
-				message: 'jQuery identifiers must start with a $',
-				fix: function(fixer) {
-					return fixer.insertTextBefore(identifier, '$');
-				}
-			});
-		}
+		context.report({
+			node: identifier,
+			message: 'jQuery identifiers must start with a $',
+			fix: function(fixer) {
+				return fixer.insertTextBefore(identifier, '$');
+			}
+		});
 	}
 
 	function checkVariableDeclarator(node) {
