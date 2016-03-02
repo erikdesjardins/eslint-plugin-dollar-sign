@@ -4,6 +4,8 @@ Enforce $varName for jQuery assignment.
 
 A direct port of the `requireDollarBeforejQueryAssignment` rule from JSCS.
 
+## Usage
+
 `npm i --save-dev eslint-plugin-dollar-sign`
 
 ```json
