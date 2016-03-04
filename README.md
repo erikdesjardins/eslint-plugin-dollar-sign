@@ -10,11 +10,11 @@ A direct port of the `requireDollarBeforejQueryAssignment` rule from JSCS.
 
 ```json
 {
-	"plugins": [
-		"dollar-sign"
-	],
-	"rules": {
-		"dollar-sign/dollar-sign": [2, "ignoreProperties"]
-	}
+  "plugins": [
+    "dollar-sign"
+  ],
+  "rules": {
+    "dollar-sign/dollar-sign": [2, "ignoreProperties"]
+  }
 }
 ```
