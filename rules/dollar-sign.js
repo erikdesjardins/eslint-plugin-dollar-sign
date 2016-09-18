@@ -54,16 +54,21 @@ module.exports = function(context) {
 
 	function reportAllReferences(variable) {
 		var refs = collectReferenceIdentifiers(variable);
+		var autofix = true;
 		var i, id;
 
 		for (i = 0; i < refs.length; ++i) {
 			id = refs[i];
-
 			if (id.parent.type === 'Property' && id.parent.shorthand) {
-				continue;
+				// if any reference is used for a shorthand property, don't autofix
+				autofix = false;
+				break;
 			}
+		}
 
-			reportIdentifier(id, true);
+		for (i = 0; i < refs.length; ++i) {
+			id = refs[i];
+			reportIdentifier(id, autofix);
 		}
 	}
 

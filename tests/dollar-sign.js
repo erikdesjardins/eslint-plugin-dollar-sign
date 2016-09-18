@@ -367,13 +367,18 @@ ruleTester.run('dollar-sign', rule, {
 		// don't autofix object property keys
 		{
 			code: 'var x = $(".foo"); ({ x });',
-			output: 'var $x = $(".foo"); ({ x });',
+			output: 'var x = $(".foo"); ({ x });',
 			ecmaFeatures: { objectLiteralShorthandProperties: true },
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
 				line: 1,
 				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 23
 			}]
 		},
 		// autofix shadowed vars in child scopes
