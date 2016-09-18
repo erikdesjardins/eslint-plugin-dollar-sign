@@ -8,46 +8,110 @@
 'use strict';
 
 module.exports = function(context) {
-	var sourceCode = context.getSourceCode();
-
 	var ignoreProperties = context.options[0] === 'ignoreProperties';
 
-	function checkIfVarNameShouldStartWithDollar(varName, left, right) {
-		if (/^_?\$/.test(varName)) {
-			return;
-		}
+	function shouldVarNameStartWithDollar(name, assignee) {
+		return (
+			name && !(/^_?\$/).test(name) &&
+			assignee && assignee.type === 'CallExpression' &&
+			assignee.callee.type === 'Identifier' && assignee.callee.name === '$'
+		);
+	}
 
-		if (!right || right.type !== 'CallExpression') {
-			return;
-		}
-
-		if (right.callee.type !== 'Identifier' || right.callee.name !== '$') {
-			return;
-		}
-
-		var identifier = sourceCode.getLastToken(left);
-
-		context.report({
+	function reportIdentifier(identifier, fix) {
+		var reportObj = {
 			node: identifier,
-			message: 'jQuery identifiers must start with a $',
-			fix: function(fixer) {
+			message: 'jQuery identifiers must start with a $'
+		};
+
+		if (fix) {
+			reportObj.fix = function(fixer) {
 				return fixer.insertTextBefore(identifier, '$');
-			}
-		});
+			};
+		}
+
+		context.report(reportObj);
 	}
 
-	function checkVariableDeclarator(node) {
-		var left = node.id;
-		if (left.type === 'ObjectPattern' || left.type === 'ArrayPattern') {
+	function collectReferenceIdentifiers(variable) {
+		var allRefs = variable.references.concat(variable.scope.references);
+		var refs = variable.identifiers.slice();
+		var i, id;
+
+		// avoid adding duplicate references
+		for (i = 0; i < allRefs.length; ++i) {
+			id = allRefs[i].identifier;
+
+			if (refs.indexOf(id) !== -1) continue;
+
+			if (id.name === variable.name) {
+				refs.push(id);
+			}
+		}
+
+		return refs;
+	}
+
+	function reportAllReferences(variable) {
+		var refs = collectReferenceIdentifiers(variable);
+		var i, id;
+
+		for (i = 0; i < refs.length; ++i) {
+			id = refs[i];
+
+			if (id.parent.type === 'Property' && id.parent.shorthand) {
+				continue;
+			}
+
+			reportIdentifier(id, true);
+		}
+	}
+
+	function shouldVarAssignmentStartWithDollar(def, variable) {
+		var refs = collectReferenceIdentifiers(variable);
+		var i, parent;
+
+		for (i = 0; i < refs.length; ++i) {
+			parent = refs[i].parent;
+
+			if (parent.type !== 'AssignmentExpression' || parent.operator !== '=') continue;
+
+			if (shouldVarNameStartWithDollar(def.name.name, parent.right)) return true;
+		}
+
+		return false;
+	}
+
+	function checkVarDeclarations(scope) {
+		var i, variable, def;
+
+		for (i = 0; i < scope.variables.length; ++i) {
+			variable = scope.variables[i];
+
+			if (!variable.defs.length) continue;
+			def = variable.defs[0];
+
+			if (def.node.id.type === 'ObjectPattern' || def.node.id.type === 'ArrayPattern') continue;
+
+			if (
+				def.node.init ?
+					shouldVarNameStartWithDollar(def.name.name, def.node.init) :
+					shouldVarAssignmentStartWithDollar(def, variable)
+			) {
+				reportAllReferences(variable);
+			}
+		}
+
+		for (i = 0; i < scope.childScopes.length; ++i) {
+			checkVarDeclarations(scope.childScopes[i]);
+		}
+	}
+
+	function checkAssignmentExpressionForObject(node) {
+		if (ignoreProperties) {
 			return;
 		}
 
-		var varName = left.name;
-		var right = node.init;
-		checkIfVarNameShouldStartWithDollar(varName, left, right);
-	}
-
-	function checkAssignmentExpression(node) {
 		var left = node.left;
 		if (left.computed) {
 			return;
@@ -57,13 +121,13 @@ module.exports = function(context) {
 			return;
 		}
 
-		if (left.property && ignoreProperties) {
+		if (!left.property) {
 			return;
 		}
 
-		var varName = left.name || left.property.name;
-		var right = node.right;
-		checkIfVarNameShouldStartWithDollar(varName, left, right);
+		if (shouldVarNameStartWithDollar(left.property.name, node.right)) {
+			reportIdentifier(left.property, false);
+		}
 	}
 
 	function checkObjectExpression(node) {
@@ -80,20 +144,18 @@ module.exports = function(context) {
 		props.forEach(function(prop) {
 			var left = prop.key;
 
-			if (!left.name) {
-				return;
+			if (shouldVarNameStartWithDollar(left.name, prop.value)) {
+				reportIdentifier(left, false);
 			}
-
-			var varName = left.name;
-			var right = prop.value;
-			checkIfVarNameShouldStartWithDollar(varName, left, right);
 		});
 	}
 
 	return {
-		VariableDeclarator: checkVariableDeclarator,
-		AssignmentExpression: checkAssignmentExpression,
-		ObjectExpression: checkObjectExpression
+		ObjectExpression: checkObjectExpression,
+		AssignmentExpression: checkAssignmentExpressionForObject,
+		'Program:exit': function() {
+			checkVarDeclarations(context.getScope());
+		}
 	};
 };
 
