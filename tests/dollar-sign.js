@@ -69,6 +69,12 @@ ruleTester.run('dollar-sign', rule, {
 		{ code: 'var [beep, boop] = $("#id")', ecmaFeatures: { destructuring: true } },
 		// array destructuring without var
 		{ code: '([beep, boop] = $("#id"))', ecmaFeatures: { destructuring: true } },
+		// defined with a non-jQuery type
+		'var x = 5; x = $(".foo");',
+		// late assignment with jQuery
+		'var $x; $x = $(".foo");',
+		// parameters
+		'(function(x) {});',
 
 		//// in object definition
 
@@ -183,21 +189,10 @@ ruleTester.run('dollar-sign', rule, {
 				column: 5
 			}]
 		},
-		// jquery operator with line not beginning with var
-		{
-			code: 'x = $(".foo");',
-			output: '$x = $(".foo");',
-			errors: [{
-				message: errorMessage,
-				type: 'Identifier',
-				line: 1,
-				column: 1
-			}]
-		},
 		// assignment on right hand side of object destructuring
 		{
 			code: 'var {foo} = {foo: $(".foo")}',
-			output: 'var {foo} = {$foo: $(".foo")}',
+			output: 'var {foo} = {foo: $(".foo")}',
 			ecmaFeatures: { destructuring: true },
 			errors: [{
 				message: errorMessage,
@@ -223,7 +218,7 @@ ruleTester.run('dollar-sign', rule, {
 		// basic jquery operator
 		{
 			code: 'var x = { foo: $() }',
-			output: 'var x = { $foo: $() }',
+			output: 'var x = { foo: $() }',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -234,7 +229,7 @@ ruleTester.run('dollar-sign', rule, {
 		// jquery operator with selector
 		{
 			code: 'var x = { foo: $(".foo") }',
-			output: 'var x = { $foo: $(".foo") }',
+			output: 'var x = { foo: $(".foo") }',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -245,7 +240,7 @@ ruleTester.run('dollar-sign', rule, {
 		// jquery operator with dollar and single quotes around selector
 		{
 			code: 'var $x = { foo: $(\'.foo\') }',
-			output: 'var $x = { $foo: $(\'.foo\') }',
+			output: 'var $x = { foo: $(\'.foo\') }',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -256,7 +251,7 @@ ruleTester.run('dollar-sign', rule, {
 		// keys besides the first
 		{
 			code: 'var x = { bar: 1, foo: $(".foo") }',
-			output: 'var x = { bar: 1, $foo: $(".foo") }',
+			output: 'var x = { bar: 1, foo: $(".foo") }',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -270,7 +265,7 @@ ruleTester.run('dollar-sign', rule, {
 		// basic jquery operator
 		{
 			code: 'this.x = $();',
-			output: 'this.$x = $();',
+			output: 'this.x = $();',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -281,7 +276,7 @@ ruleTester.run('dollar-sign', rule, {
 		// jquery operator with html
 		{
 			code: 'this.x = $("<p>foo</p>");',
-			output: 'this.$x = $("<p>foo</p>");',
+			output: 'this.x = $("<p>foo</p>");',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -292,7 +287,7 @@ ruleTester.run('dollar-sign', rule, {
 		// jquery operator with selector
 		{
 			code: 'this.x = $(".foo");',
-			output: 'this.$x = $(".foo");',
+			output: 'this.x = $(".foo");',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -303,7 +298,7 @@ ruleTester.run('dollar-sign', rule, {
 		// multi level object assignment without dollar
 		{
 			code: 'a.b.c = $()',
-			output: 'a.b.$c = $()',
+			output: 'a.b.c = $()',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -326,16 +321,98 @@ ruleTester.run('dollar-sign', rule, {
 				column: 5
 			}]
 		},
-		// jquery operator with line not beginning with var
+
+		//// Autofixing
+
+		// autofix var usages
 		{
-			code: 'x = $(".foo");',
-			output: '$x = $(".foo");',
-			options: ['ignoreProperties'],
+			code: 'var x = $(".foo"); x.bar(); baz(x);',
+			output: 'var $x = $(".foo"); $x.bar(); baz($x);',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
 				line: 1,
-				column: 1
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 20
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 33
+			}]
+		},
+		// autofix assignments to object properties
+		{
+			code: 'var x = $(".foo"); ({ abc: x }); this.def = x;',
+			output: 'var $x = $(".foo"); ({ abc: $x }); this.def = $x;',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 28
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 45
+			}]
+		},
+		// don't autofix object property keys
+		{
+			code: 'var x = $(".foo"); ({ x });',
+			output: 'var x = $(".foo"); ({ x });',
+			ecmaFeatures: { objectLiteralShorthandProperties: true },
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 23
+			}]
+		},
+		// autofix shadowed vars in child scopes
+		{
+			code: 'var x; (function() { var x = $(); (function() { x; (function() { var x; }); }); });',
+			output: 'var x; (function() { var $x = $(); (function() { $x; (function() { var x; }); }); });',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 26
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 49
+			}]
+		},
+		// autofix late-assigned vars
+		{
+			code: 'var x; x = $();',
+			output: 'var $x; $x = $();',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 8
 			}]
 		}
 	]
