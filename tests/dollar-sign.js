@@ -73,6 +73,8 @@ ruleTester.run('dollar-sign', rule, {
 		'var x = 5; x = $(".foo");',
 		// late assignment with jQuery
 		'var $x; $x = $(".foo");',
+		// parameters
+		'(function(x) {});',
 
 		//// in object definition
 

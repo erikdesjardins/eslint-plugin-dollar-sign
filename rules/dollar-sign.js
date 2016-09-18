@@ -96,7 +96,7 @@ module.exports = function(context) {
 			if (!variable.defs.length) continue;
 			def = variable.defs[0];
 
-			if (def.node.id.type === 'ObjectPattern' || def.node.id.type === 'ArrayPattern') continue;
+			if (!def.node.id || def.node.id.type === 'ObjectPattern' || def.node.id.type === 'ArrayPattern') continue;
 
 			if (
 				def.node.init ?
