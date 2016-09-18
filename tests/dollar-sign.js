@@ -69,6 +69,10 @@ ruleTester.run('dollar-sign', rule, {
 		{ code: 'var [beep, boop] = $("#id")', ecmaFeatures: { destructuring: true } },
 		// array destructuring without var
 		{ code: '([beep, boop] = $("#id"))', ecmaFeatures: { destructuring: true } },
+		// defined with a non-jQuery type
+		'var x = 5; x = $(".foo");',
+		// late assignment with jQuery
+		'var $x; $x = $(".foo");',
 
 		//// in object definition
 
@@ -181,17 +185,6 @@ ruleTester.run('dollar-sign', rule, {
 				type: 'Identifier',
 				line: 1,
 				column: 5
-			}]
-		},
-		// jquery operator with line not beginning with var
-		{
-			code: 'x = $(".foo");',
-			output: '$x = $(".foo");',
-			errors: [{
-				message: errorMessage,
-				type: 'Identifier',
-				line: 1,
-				column: 1
 			}]
 		},
 		// assignment on right hand side of object destructuring
@@ -326,16 +319,93 @@ ruleTester.run('dollar-sign', rule, {
 				column: 5
 			}]
 		},
-		// jquery operator with line not beginning with var
+
+		//// Autofixing
+
+		// autofix var usages
 		{
-			code: 'x = $(".foo");',
-			output: '$x = $(".foo");',
-			options: ['ignoreProperties'],
+			code: 'var x = $(".foo"); x.bar(); baz(x);',
+			output: 'var $x = $(".foo"); $x.bar(); baz($x);',
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
 				line: 1,
-				column: 1
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 20
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 33
+			}]
+		},
+		// autofix assignments to object properties
+		{
+			code: 'var x = $(".foo"); ({ abc: x }); this.def = x;',
+			output: 'var $x = $(".foo"); ({ abc: $x }); this.def = $x;',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 28
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 45
+			}]
+		},
+		// don't autofix object property keys
+		{
+			code: 'var x = $(".foo"); ({ x });',
+			output: 'var $x = $(".foo"); ({ x });',
+			ecmaFeatures: { objectLiteralShorthandProperties: true },
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}]
+		},
+		// autofix shadowed vars in child scopes
+		{
+			code: 'var x; (function() { var x = $(); (function() { x; (function() { var x; }); }); });',
+			output: 'var x; (function() { var $x = $(); (function() { $x; (function() { var x; }); }); });',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 26
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 49
+			}]
+		},
+		// autofix late-assigned vars
+		{
+			code: 'var x; x = $();',
+			output: 'var $x; $x = $();',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}, {
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 8
 			}]
 		}
 	]
