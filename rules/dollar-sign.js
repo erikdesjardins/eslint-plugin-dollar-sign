@@ -149,6 +149,10 @@ module.exports = function(context) {
 		props.forEach(function(prop) {
 			var left = prop.key;
 
+			if (!left) {
+				return;
+			}
+
 			if (shouldVarNameStartWithDollar(left.name, prop.value)) {
 				reportIdentifier(left, false);
 			}

@@ -12,7 +12,7 @@ var RuleTester = require("eslint").RuleTester;
 
 var errorMessage = 'jQuery identifiers must start with a $';
 
-var ruleTester = new RuleTester();
+var ruleTester = new RuleTester({ env: { es6: true } });
 ruleTester.run('dollar-sign', rule, {
 	valid: [
 		// basic jquery operator with dollar
@@ -60,15 +60,15 @@ ruleTester.run('dollar-sign', rule, {
 		// jquery operator with dollar and single quotes around selector
 		'var $x = $(\'.foo\');',
 		// object destructuring
-		{ code: 'var {beep, boop} = meep;\nvar $s = $("#id")', ecmaFeatures: { destructuring: true } },
-		{ code: 'var {beep, boop} = $("#id")', ecmaFeatures: { destructuring: true } },
+		'var {beep, boop} = meep;\nvar $s = $("#id")',
+		'var {beep, boop} = $("#id")',
 		// object destructuring without var
-		{ code: '({beep, boop} = $("#id"))', ecmaFeatures: { destructuring: true } },
+		'({beep, boop} = $("#id"))',
 		// array destructuring
-		{ code: 'var [beep, boop] = meep;\nvar $s = $("#id")', ecmaFeatures: { destructuring: true } },
-		{ code: 'var [beep, boop] = $("#id")', ecmaFeatures: { destructuring: true } },
+		'var [beep, boop] = meep;\nvar $s = $("#id")',
+		'var [beep, boop] = $("#id")',
 		// array destructuring without var
-		{ code: '([beep, boop] = $("#id"))', ecmaFeatures: { destructuring: true } },
+		'([beep, boop] = $("#id"))',
 		// defined with a non-jQuery type
 		'var x = 5; x = $(".foo");',
 		// late assignment with jQuery
@@ -129,6 +129,10 @@ ruleTester.run('dollar-sign', rule, {
 		'w.a = 1 + 2;',
 		// multi level object assignment
 		'a.b.$c = $()',
+		// object spread
+		{ code: 'var foo = { ...{ a: 1 } };', parserOptions: { ecmaFeatures: { experimentalObjectRestSpread: true } } },
+		// object rest
+		{ code: 'var { ...foo } = { a: 1 };', parserOptions: { ecmaFeatures: { experimentalObjectRestSpread: true } } },
 
 		//// option value `"ignoreProperties"`
 
@@ -193,7 +197,6 @@ ruleTester.run('dollar-sign', rule, {
 		{
 			code: 'var {foo} = {foo: $(".foo")}',
 			output: 'var {foo} = {foo: $(".foo")}',
-			ecmaFeatures: { destructuring: true },
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
@@ -370,7 +373,6 @@ ruleTester.run('dollar-sign', rule, {
 		{
 			code: 'var x = $(".foo"); ({ x });',
 			output: 'var x = $(".foo"); ({ x });',
-			ecmaFeatures: { objectLiteralShorthandProperties: true },
 			errors: [{
 				message: errorMessage,
 				type: 'Identifier',
