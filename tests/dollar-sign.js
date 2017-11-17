@@ -129,6 +129,10 @@ ruleTester.run('dollar-sign', rule, {
 		'w.a = 1 + 2;',
 		// multi level object assignment
 		'a.b.$c = $()',
+		// object spread
+		{ code: 'var foo = { ...{ a: 1 } };', parserOptions: { ecmaFeatures: { experimentalObjectRestSpread: true } } },
+		// object rest
+		{ code: 'var { ...foo } = { a: 1 };', parserOptions: { ecmaFeatures: { experimentalObjectRestSpread: true } } },
 
 		//// option value `"ignoreProperties"`
 
