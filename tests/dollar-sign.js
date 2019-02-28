@@ -419,3 +419,26 @@ ruleTester.run('dollar-sign', rule, {
 		}
 	]
 });
+
+var ruleTesterTs = new RuleTester({ parser: '@typescript-eslint/parser' });
+ruleTesterTs.run('dollar-sign', rule, {
+	valid: [
+		'require([], function() {\n' +
+		'	const ViewModel = (function() {\n' +
+		'		const enum cfg {ENTRIES_PER_PAGE = 50};\n' +
+		'	})();\n' +
+		'});\n'
+	],
+	invalid: [
+		{
+			code: 'var x = $();',
+			output: 'var $x = $();',
+			errors: [{
+				message: errorMessage,
+				type: 'Identifier',
+				line: 1,
+				column: 5
+			}]
+		}
+	]
+});

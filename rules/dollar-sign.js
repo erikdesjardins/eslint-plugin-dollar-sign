@@ -59,7 +59,7 @@ module.exports = function(context) {
 
 		for (i = 0; i < refs.length; ++i) {
 			id = refs[i];
-			if (id.parent.type === 'Property' && id.parent.shorthand) {
+			if (id.parent && id.parent.type === 'Property' && id.parent.shorthand) {
 				// if any reference is used for a shorthand property, don't autofix
 				autofix = false;
 				break;
@@ -79,7 +79,7 @@ module.exports = function(context) {
 		for (i = 0; i < refs.length; ++i) {
 			parent = refs[i].parent;
 
-			if (parent.type !== 'AssignmentExpression' || parent.operator !== '=') continue;
+			if (!parent || parent.type !== 'AssignmentExpression' || parent.operator !== '=') continue;
 
 			if (shouldVarNameStartWithDollar(def.name.name, parent.right)) return true;
 		}
