@@ -130,9 +130,9 @@ ruleTester.run('dollar-sign', rule, {
 		// multi level object assignment
 		'a.b.$c = $()',
 		// object spread
-		{ code: 'var foo = { ...{ a: 1 } };', parserOptions: { ecmaFeatures: { experimentalObjectRestSpread: true } } },
+		{ code: 'var foo = { ...{ a: 1 } };', parserOptions: { ecmaVersion: 2018 } },
 		// object rest
-		{ code: 'var { ...foo } = { a: 1 };', parserOptions: { ecmaFeatures: { experimentalObjectRestSpread: true } } },
+		{ code: 'var { ...foo } = { a: 1 };', parserOptions: { ecmaVersion: 2018 } },
 
 		//// option value `"ignoreProperties"`
 
@@ -420,7 +420,7 @@ ruleTester.run('dollar-sign', rule, {
 	]
 });
 
-var ruleTesterTs = new RuleTester({ parser: '@typescript-eslint/parser' });
+var ruleTesterTs = new RuleTester({ parser: require.resolve('@typescript-eslint/parser') });
 ruleTesterTs.run('dollar-sign', rule, {
 	valid: [
 		'require([], function() {\n' +
